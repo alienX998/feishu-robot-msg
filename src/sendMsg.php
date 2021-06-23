@@ -4,16 +4,18 @@ namespace Feishu;
 
 class sendMsg{
 
-    /**
-     * @var string 机器人通知地址
-     */
-    private static $OPEN_URL = '您自定义机器人webhook地址';
+    static $webhook_url = '';//您自定义机器人webhook地址
+    static $root_secret = '';//开启签名验证字符串
 
-    /**
-     * @var string 签名字符
-     */
-    private static $ROOT_SECRET = '开启签名验证字符串';
+    protected static function setWebHookUrl($webhook_url)
+    {
+        self::$webhook_url = $webhook_url;
+    }
 
+    protected function setRootSecret($root_secret)
+    {
+        self::$root_secret = $root_secret;
+    }
     /**
      * Notes: 发送飞书消息
      * User: yuncopy.chen
@@ -37,6 +39,25 @@ class sendMsg{
 
 
     /**
+     * Notes: 发送飞书消息
+     * function: doSendMessage
+     * @param string $title
+     * @param string $content
+     * @return mixed
+     * @static
+     */
+    public static function noticeMsgNew($title,$content){
+        try{
+            if ($title && $content) {
+                return self::sendRequestNew($title,$content);
+            }
+        }catch (\Throwable $e){
+            return false;
+        }
+    }
+
+
+    /**
      * Notes: 执行发送
      * User: yuncopy.chen
      * Date: 2021/2/25 下午6:25
@@ -47,7 +68,7 @@ class sendMsg{
      * @return mixed
      * @static
      */
-    private static function sendRequest($title,$content,$developer){
+    protected static function sendRequest($title,$content,$developer){
 
         $timestamp = time();
         $message = "{$content}，开发者：{$developer}。";
@@ -58,7 +79,43 @@ class sendMsg{
             'content'=>['post'=>['zh_cn'=>['title'=>"通知：{$title}",'content'=>[[['tag'=>'text','text'=>$message]]]]] ]
         ], JSON_UNESCAPED_UNICODE);
         $header = ['Content-Type: application/json; charset=utf-8'];
-        return  self::doPostRequest(self::$OPEN_URL,$data,100,$header);
+        return  self::doPostRequest(self::$webhook_url,$data,100,$header);
+    }
+
+
+    /**
+     * Notes: 执行发送
+     * function: sendRequest
+     * @param $title
+     * @param $content
+     * @return mixed
+     * @static
+     */
+    protected static function sendRequestNew($title,$content){
+
+        $timestamp = time();
+        $sed = [];
+        foreach ($content as $item){
+            $sed = [
+                ['tag'=>'text','text'=>$item]
+            ];
+        }
+        $data = json_encode([
+            'timestamp'=>$timestamp,
+            'sign'=>self::makeSign($timestamp),
+            'msg_type'=>'post',
+            'content'=>[
+                'post'=>
+                    ['zh_cn'=>
+                         [
+                             'title'=>"通知：{$title}告警信息",
+                            'content'=> $sed
+                         ]
+                    ]
+            ]
+        ], JSON_UNESCAPED_UNICODE);
+        $header = ['Content-Type: application/json; charset=utf-8'];
+        return  self::doPostRequest(self::$webhook_url,$data,100,$header);
     }
 
 
@@ -71,9 +128,9 @@ class sendMsg{
      * @return string
      * @static
      */
-    private static function makeSign($time=''){
+    protected static function makeSign($time=''){
         $timestamp = $time ? $time : time();
-        $secret = self::$ROOT_SECRET;
+        $secret = self::$root_secret;
         $string = "{$timestamp}\n{$secret}";
         return base64_encode(hash_hmac('sha256',"", $string,true));
     }
@@ -118,7 +175,6 @@ class sendMsg{
             //error message
             $returnData = curl_error($curlObj);
         }
-        //var_dump($returnData);
         curl_close($curlObj);
         return $returnData;
     }
