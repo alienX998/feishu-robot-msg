@@ -42,7 +42,7 @@ class sendMsg{
      * Notes: 发送飞书消息
      * function: doSendMessage
      * @param string $title
-     * @param string $content
+     * @param array $content
      * @return mixed
      * @static
      */
@@ -96,9 +96,9 @@ class sendMsg{
         $timestamp = time();
         $sed = [];
         foreach ($content as $item){
-            $sed = [
+            array_push($sed,[
                 ['tag'=>'text','text'=>$item]
-            ];
+            ]);
         }
         $data = json_encode([
             'timestamp'=>$timestamp,
