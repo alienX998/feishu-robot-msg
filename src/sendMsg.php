@@ -32,7 +32,9 @@ class sendMsg{
             if ($title && $content && $developer) {
                 return self::sendRequest($title,$content,$developer);
             }
-        }catch (\Throwable $e){
+        }catch (\Exception $e){
+            return false;
+        }catch (\Throwable $t) {
             return false;
         }
     }
@@ -50,7 +52,9 @@ class sendMsg{
             if ($title && $content) {
                 return self::sendRequestNew($title,$content,$add_content);
             }
-        }catch (\Throwable $e){
+        }catch (\Exception $e){
+            return false;
+        } catch (\Throwable $t) {
             return false;
         }
     }
