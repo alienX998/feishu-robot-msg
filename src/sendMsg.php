@@ -39,17 +39,16 @@ class sendMsg{
 
 
     /**
-     * Notes: 发送飞书消息
-     * function: doSendMessage
-     * @param string $title
-     * @param array $content
-     * @return mixed
-     * @static
+     * 发送飞书消息
+     * @param $title
+     * @param $content
+     * @param $add_content
+     * @return false|mixed
      */
-    public static function noticeMsgNew($title,$content){
+    public static function noticeMsgNew($title,$content,$add_content){
         try{
             if ($title && $content) {
-                return self::sendRequestNew($title,$content);
+                return self::sendRequestNew($title,$content,$add_content);
             }
         }catch (\Throwable $e){
             return false;
@@ -88,10 +87,11 @@ class sendMsg{
      * function: sendRequest
      * @param $title
      * @param $content
+     * @param $add_content
      * @return mixed
      * @static
      */
-    protected static function sendRequestNew($title,$content){
+    protected static function sendRequestNew($title,$content,$add_content){
 
         $timestamp = time();
         $sed = [];
@@ -99,6 +99,9 @@ class sendMsg{
             array_push($sed,[
                 ['tag'=>'text','text'=>$item]
             ]);
+        }
+        if($add_content){
+            array_push($sed,$add_content);
         }
         $data = json_encode([
             'timestamp'=>$timestamp,
